@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Skin Histology Quiz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; user-select: none; }
+  button { font-family: inherit; }
+  #upload-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+  .emoji { font-size: 48px; }
+  h1, h2 { font-size: 24px; font-weight: 700; }
+  .sub { color: #94a3b8; max-width: 340px; line-height: 1.5; }
+  .btn-primary { padding: 12px 28px; background: #f43f5e; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(244,63,94,0.4); }
+  .btn-primary:hover { background: #e11d48; }
+  #topbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #topbar span { font-weight: 700; font-size: 15px; }
+  #topbar-right { display: flex; gap: 8px; align-items: center; }
+  #score-label { font-size: 13px; color: #94a3b8; }
+  #score-label b { color: #22c55e; }
+  #btn-reset { padding: 5px 10px; background: #334155; color: #94a3b8; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; display: none; }
+  #btn-edit { padding: 5px 12px; background: #334155; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  #btn-download { padding: 5px 12px; background: #0f766e; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  #btn-download:hover { background: #0d9488; }
+  #progress-bar { height: 4px; background: #1e293b; }
+  #progress-fill { height: 100%; background: #f43f5e; width: 0%; transition: width 0.4s; }
+  #edit-banner { background: #1e1b4b; padding: 10px 16px; text-align: center; font-size: 13px; color: #c7d2fe; display: none; }
+  #edit-banner strong { color: white; }
+  #question-banner { background: #0f3460; padding: 14px 18px; text-align: center; }
+  #q-label { font-size: 11px; letter-spacing: 2px; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+  #q-name { font-size: 22px; font-weight: 800; }
+  #btn-hint { margin-top: 8px; padding: 3px 14px; background: transparent; color: #64748b; border: 1px solid #334155; border-radius: 20px; cursor: pointer; font-size: 12px; }
+  #hint-text { margin-top: 8px; font-size: 13px; color: #fbbf24; font-style: italic; max-width: 480px; display: none; }
+  #image-area { flex: 1; display: flex; justify-content: center; align-items: center; padding: 16px; overflow: hidden; }
+  #img-container { position: relative; display: inline-block; line-height: 0; }
+  #slide-img { max-width: 100%; max-height: 52vh; border-radius: 10px; display: block; box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: none; }
+  .hotspot-wrap { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; transition: transform 0.2s; }
+  .hotspot-label { background: rgba(15,23,42,0.9); color: #c7d2fe; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: 1px solid #4f46e5; margin-bottom: 2px; display: none; pointer-events: none; }
+  .hotspot-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.92); color: #1e293b; border: 2.5px solid rgba(255,255,255,0.6); cursor: pointer; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.5); line-height: 1; transition: all 0.2s; }
+  #footer { background: #1e293b; border-top: 1px solid #334155; padding: 14px 18px; text-align: center; min-height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  #footer-idle { color: #475569; font-size: 14px; }
+  #footer-edit { color: #818cf8; font-size: 14px; display: none; }
+  #footer-answered { display: none; flex-direction: column; align-items: center; gap: 8px; }
+  #answer-result { font-size: 15px; font-weight: 700; }
+  #answer-hint { font-size: 13px; color: #fbbf24; font-style: italic; max-width: 500px; }
+  #btn-next { margin-top: 4px; padding: 9px 24px; background: #f43f5e; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 3px 10px rgba(244,63,94,0.35); }
+  #results-screen { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; }
+  #big-score { font-size: 52px; font-weight: 800; }
+  #big-score span { font-size: 28px; font-weight: 400; color: #94a3b8; }
+  #results-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 6px; }
+  .result-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 8px; font-size: 14px; }
+  .result-row.ok  { background: #14532d; border: 1px solid #16a34a; }
+  .result-row.bad { background: #450a0a; border: 1px solid #b91c1c; }
+</style>
+</head>
+<body>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen">
+  <div class="emoji">🔬</div>
+  <h1>Skin Histology Quiz</h1>
+  <p class="sub">Upload your H&E skin slide, position the hotspots in Edit mode, then click <strong>⬇ Download Quiz</strong> to share a self-contained file with your students.</p>
+  <button class="btn-primary" onclick="document.getElementById('file-input').click()">Upload Slide Image</button>
+  <input id="file-input" type="file" accept="image/*" style="display:none" onchange="loadImage(event)" />
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz-screen" style="display:none; flex-direction:column; flex:1; min-height:100vh;">
+  <div id="topbar">
+    <span>🔬 Skin Histology Quiz</span>
+    <div id="topbar-right">
+      <span id="score-label"><b id="score-val">0</b> correct · Q<span id="q-num">1</span>/<span id="q-total">7</span></span>
+      <button id="btn-reset" onclick="resetPositions()">↺ Reset</button>
+      <button id="btn-edit" onclick="toggleEdit()">✏️ Edit Hotspots</button>
+      <button id="btn-download" onclick="downloadQuiz()">⬇ Download Quiz</button>
+    </div>
+  </div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="edit-banner"><strong>Edit Mode</strong> — Drag each numbered hotspot to the correct position. Labels appear while dragging. When done, click ✓ Done Editing, then ⬇ Download Quiz.</div>
+  <div id="question-banner">
+    <div id="q-label">Find this structure</div>
+    <div id="q-name"></div>
+    <button id="btn-hint" onclick="toggleHint()">Show hint</button>
+    <div id="hint-text"></div>
+  </div>
+  <div id="image-area">
+    <div id="img-container">
+      <img id="slide-img" alt="histology slide" />
+    </div>
+  </div>
+  <div id="footer">
+    <p id="footer-idle">Click the numbered hotspot on the image above.</p>
+    <p id="footer-edit">Drag hotspots into place, then click <strong>✓ Done Editing</strong> to resume.</p>
+    <div id="footer-answered">
+      <p id="answer-result"></p>
+      <p id="answer-hint"></p>
+      <button id="btn-next" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="results-screen">
+  <div class="emoji" id="result-emoji">🎉</div>
+  <h2>Quiz Complete!</h2>
+  <div id="big-score"></div>
+  <div id="results-list"></div>
+  <button class="btn-primary" onclick="restartQuiz()">Try Again</button>
+</div>
+
+<script>
+const HOTSPOTS = [
+  { id:1, x:49, y:6,  label:"Foramen magnum",    hint:"The largest foramen at the base of the skull." },
+  { id:2, x:58, y:20, label:"Occipital condyle", hint:"One of two bumps that allow the skull to sit on atlas nicely." },
+  { id:3, x:67, y:35, label:"Zygomatic arch",   hint:"The bony arch made of temporal and zygomatic pieces making part of the cheek bone." },
+  { id:4, x:72, y:51, label:"Palatine",     hint:"The bony shelf that makes the anterior hard palate." },
+  { id:5, x:78, y:84, label:"Occipital bone",             hint:"Posterior and inforior parts of the skull that house the visual cortex." },
+  { id:6, x:29, y:51, label:"Mastoid process",        hint:"Process that posterior to the styloid process." },
+  { id:7, x:18, y:73, label:"Testing Notepad edits",      hint:"If I edit the html in notepad and save, would Github accept the edits." },
+];
+
+let positions = {}, imgBase64 = null;
+let order = [], qIdx = 0, selected = null, score = 0;
+let editMode = false, draggingId = null, showHint = false, results = [];
+
+function defaultPositions() {
+  const p = {};
+  HOTSPOTS.forEach(h => p[h.id] = { x: h.x, y: h.y });
+  return p;
+}
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function loadImage(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    imgBase64 = ev.target.result;
+    document.getElementById('slide-img').src = imgBase64;
+    document.getElementById('upload-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'flex';
+    initQuiz();
+  };
+  reader.readAsDataURL(f);
+}
+
+function initQuiz() {
+  positions = defaultPositions();
+  order = shuffle([...Array(HOTSPOTS.length).keys()]);
+  qIdx = 0; selected = null; score = 0; results = []; editMode = false; showHint = false;
+  document.getElementById('q-total').textContent = HOTSPOTS.length;
+  buildHotspots();
+  renderQuestion();
+}
+
+function buildHotspots() {
+  document.querySelectorAll('.hotspot-wrap').forEach(el => el.remove());
+  const container = document.getElementById('img-container');
+  HOTSPOTS.forEach(h => {
+    const wrap = document.createElement('div');
+    wrap.className = 'hotspot-wrap'; wrap.id = `wrap-${h.id}`;
+    const lbl = document.createElement('div');
+    lbl.className = 'hotspot-label'; lbl.id = `lbl-${h.id}`; lbl.textContent = h.label;
+    const btn = document.createElement('button');
+    btn.className = 'hotspot-btn'; btn.id = `btn-${h.id}`; btn.textContent = h.id;
+    btn.onclick = () => clickHotspot(h.id);
+    btn.addEventListener('mousedown', ev => startDrag(ev, h.id));
+    btn.addEventListener('touchstart', ev => startDrag(ev, h.id), { passive: false });
+    wrap.appendChild(lbl); wrap.appendChild(btn); container.appendChild(wrap);
+    placeHotspot(h.id);
+  });
+}
+
+function placeHotspot(id) {
+  const wrap = document.getElementById(`wrap-${id}`);
+  wrap.style.left = positions[id].x + '%';
+  wrap.style.top  = positions[id].y + '%';
+}
+
+function renderQuestion() {
+  const h = HOTSPOTS[order[qIdx]];
+  document.getElementById('q-name').textContent = h.label;
+  document.getElementById('hint-text').textContent = h.hint;
+  document.getElementById('hint-text').style.display = 'none';
+  document.getElementById('btn-hint').textContent = 'Show hint';
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('q-num').textContent = qIdx + 1;
+  document.getElementById('progress-fill').style.width = ((qIdx / HOTSPOTS.length) * 100) + '%';
+  document.getElementById('btn-hint').style.display = 'inline-block';
+  showHint = false; selected = null;
+  document.getElementById('footer-idle').style.display = 'block';
+  document.getElementById('footer-answered').style.display = 'none';
+  document.getElementById('footer-edit').style.display = 'none';
+  HOTSPOTS.forEach(hh => styleHotspot(hh.id, 'default'));
+}
+
+function styleHotspot(id, state) {
+  const btn = document.getElementById(`btn-${id}`);
+  const wrap = document.getElementById(`wrap-${id}`);
+  if (!btn) return;
+  const s = btn.style, w = wrap.style;
+  if (state === 'correct') {
+    s.background='#22c55e'; s.color='white'; s.border='2.5px solid #22c55e';
+    s.boxShadow='0 0 0 4px rgba(34,197,94,0.35),0 2px 8px rgba(0,0,0,0.5)';
+    w.transform='translate(-50%,-50%) scale(1.2)'; s.cursor='default';
+  } else if (state === 'wrong') {
+    s.background='#ef4444'; s.color='white'; s.border='2.5px solid #ef4444';
+    s.boxShadow='0 0 0 4px rgba(239,68,68,0.35),0 2px 8px rgba(0,0,0,0.5)';
+    w.transform='translate(-50%,-50%) scale(1.1)'; s.cursor='default';
+  } else if (state === 'dim') {
+    s.background='rgba(255,255,255,0.3)'; s.color='rgba(255,255,255,0.5)';
+    s.border='2.5px solid rgba(255,255,255,0.15)'; s.boxShadow='0 2px 8px rgba(0,0,0,0.5)';
+    w.transform='translate(-50%,-50%) scale(1)'; s.cursor='default';
+  } else if (state === 'edit') {
+    s.background='#818cf8'; s.color='white'; s.border='2.5px solid #6366f1';
+    s.boxShadow='0 2px 12px rgba(99,102,241,0.4)'; s.cursor='grab';
+    w.transform='translate(-50%,-50%) scale(1)';
+  } else {
+    s.background='rgba(255,255,255,0.92)'; s.color='#1e293b';
+    s.border='2.5px solid rgba(255,255,255,0.6)'; s.boxShadow='0 2px 8px rgba(0,0,0,0.5)';
+    w.transform='translate(-50%,-50%) scale(1)'; s.cursor='pointer';
+  }
+}
+
+function clickHotspot(id) {
+  if (selected !== null || editMode) return;
+  const current = HOTSPOTS[order[qIdx]];
+  const ok = id === current.id;
+  selected = id;
+  if (ok) score++;
+  results.push({ correct: ok, label: current.label });
+  HOTSPOTS.forEach(hh => {
+    if (hh.id === current.id) styleHotspot(hh.id, 'correct');
+    else if (hh.id === id) styleHotspot(hh.id, 'wrong');
+    else styleHotspot(hh.id, 'dim');
+  });
+  document.getElementById('footer-idle').style.display = 'none';
+  document.getElementById('btn-hint').style.display = 'none';
+  document.getElementById('hint-text').style.display = 'none';
+  const res = document.getElementById('answer-result');
+  res.style.color = ok ? '#22c55e' : '#ef4444';
+  res.textContent = ok ? '✓ Correct!' : `✗ That was the ${HOTSPOTS.find(h=>h.id===id)?.label}. Correct answer: hotspot #${current.id}.`;
+  document.getElementById('answer-hint').textContent = current.hint;
+  document.getElementById('btn-next').textContent = qIdx+1 >= HOTSPOTS.length ? 'See Results →' : 'Next Question →';
+  document.getElementById('footer-answered').style.display = 'flex';
+  document.getElementById('score-val').textContent = score;
+}
+
+function nextQuestion() {
+  if (qIdx + 1 >= HOTSPOTS.length) { showResults(); return; }
+  qIdx++; renderQuestion();
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const rs = document.getElementById('results-screen');
+  rs.style.display = 'flex';
+  const pct = Math.round((score/HOTSPOTS.length)*100);
+  document.getElementById('result-emoji').textContent = pct===100?'🏆':pct>=70?'🎉':'📖';
+  document.getElementById('big-score').innerHTML = `${score}<span>/${HOTSPOTS.length}</span>`;
+  document.getElementById('big-score').style.color = pct===100?'#fbbf24':pct>=70?'#22c55e':'#ef4444';
+  const list = document.getElementById('results-list'); list.innerHTML = '';
+  results.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'result-row ' + (r.correct?'ok':'bad');
+    row.innerHTML = `<span>${r.correct?'✓':'✗'}</span><span>${r.label}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function restartQuiz() {
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'flex';
+  order = shuffle([...Array(HOTSPOTS.length).keys()]);
+  qIdx=0; selected=null; score=0; results=[]; editMode=false; showHint=false;
+  document.getElementById('btn-edit').textContent='✏️ Edit Hotspots';
+  document.getElementById('btn-edit').style.background='#334155';
+  document.getElementById('edit-banner').style.display='none';
+  document.getElementById('btn-reset').style.display='none';
+  document.getElementById('progress-bar').style.display='block';
+  document.getElementById('question-banner').style.display='block';
+  document.getElementById('score-label').style.display='inline';
+  HOTSPOTS.forEach(h => { styleHotspot(h.id,'default'); document.getElementById(`lbl-${h.id}`).style.display='none'; });
+  renderQuestion();
+}
+
+function toggleHint() {
+  showHint = !showHint;
+  document.getElementById('hint-text').style.display = showHint ? 'block' : 'none';
+  document.getElementById('btn-hint').textContent = showHint ? 'Hide hint' : 'Show hint';
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  const img = document.getElementById('slide-img');
+  if (editMode) {
+    document.getElementById('btn-edit').textContent='✓ Done Editing';
+    document.getElementById('btn-edit').style.background='#818cf8';
+    document.getElementById('edit-banner').style.display='block';
+    document.getElementById('btn-reset').style.display='inline-block';
+    document.getElementById('score-label').style.display='none';
+    document.getElementById('progress-bar').style.display='none';
+    document.getElementById('question-banner').style.display='none';
+    document.getElementById('footer-idle').style.display='none';
+    document.getElementById('footer-answered').style.display='none';
+    document.getElementById('footer-edit').style.display='block';
+    img.style.maxHeight='62vh'; img.style.outline='2px dashed #818cf8';
+    HOTSPOTS.forEach(h => { styleHotspot(h.id,'edit'); document.getElementById(`lbl-${h.id}`).style.display='block'; });
+  } else {
+    document.getElementById('btn-edit').textContent='✏️ Edit Hotspots';
+    document.getElementById('btn-edit').style.background='#334155';
+    document.getElementById('edit-banner').style.display='none';
+    document.getElementById('btn-reset').style.display='none';
+    document.getElementById('score-label').style.display='inline';
+    document.getElementById('progress-bar').style.display='block';
+    document.getElementById('question-banner').style.display='block';
+    document.getElementById('footer-edit').style.display='none';
+    img.style.maxHeight='52vh'; img.style.outline='none';
+    HOTSPOTS.forEach(h => { styleHotspot(h.id,'default'); document.getElementById(`lbl-${h.id}`).style.display='none'; });
+    if (selected !== null) document.getElementById('footer-answered').style.display='flex';
+    else document.getElementById('footer-idle').style.display='block';
+  }
+}
+
+function resetPositions() {
+  positions = defaultPositions();
+  HOTSPOTS.forEach(h => placeHotspot(h.id));
+}
+
+/* ── Drag ── */
+function startDrag(e, id) {
+  if (!editMode) return;
+  e.preventDefault();
+  draggingId = id;
+  const btn = document.getElementById(`btn-${id}`);
+  const wrap = document.getElementById(`wrap-${id}`);
+  btn.style.boxShadow='0 4px 20px rgba(99,102,241,0.7)';
+  wrap.style.transform='translate(-50%,-50%) scale(1.3)';
+  wrap.style.zIndex=20;
+}
+document.addEventListener('mousemove', onDragMove);
+document.addEventListener('touchmove', onDragMove, { passive: false });
+document.addEventListener('mouseup', stopDrag);
+document.addEventListener('touchend', stopDrag);
+
+function onDragMove(e) {
+  if (!draggingId) return;
+  e.preventDefault();
+  const rect = document.getElementById('img-container').getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  const x = Math.max(2, Math.min(98, ((cx-rect.left)/rect.width)*100));
+  const y = Math.max(2, Math.min(98, ((cy-rect.top)/rect.height)*100));
+  positions[draggingId] = { x, y };
+  placeHotspot(draggingId);
+}
+function stopDrag() {
+  if (!draggingId) return;
+  const wrap = document.getElementById(`wrap-${draggingId}`);
+  if (wrap) { wrap.style.transform='translate(-50%,-50%) scale(1)'; wrap.style.zIndex=1; }
+  draggingId = null;
+}
+
+/* ══════════════════════════════════════════
+   DOWNLOAD: Generate self-contained HTML
+══════════════════════════════════════════ */
+function downloadQuiz() {
+  if (!imgBase64) { alert('Please upload an image first.'); return; }
+
+  // Snapshot current positions
+  const frozenPositions = JSON.parse(JSON.stringify(positions));
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Skin Histology Quiz</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:white;font-family:'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;user-select:none}
+  button{font-family:inherit}
+  .btn-primary{padding:12px 28px;background:#f43f5e;color:white;border:none;border-radius:10px;cursor:pointer;font-size:16px;font-weight:600;box-shadow:0 4px 14px rgba(244,63,94,0.4)}
+  #topbar{background:#1e293b;border-bottom:1px solid #334155;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  #topbar>span{font-weight:700;font-size:15px}
+  #topbar-right{display:flex;gap:8px;align-items:center}
+  #score-label{font-size:13px;color:#94a3b8}
+  #score-label b{color:#22c55e}
+  #progress-bar{height:4px;background:#1e293b}
+  #progress-fill{height:100%;background:#f43f5e;width:0%;transition:width 0.4s}
+  #question-banner{background:#0f3460;padding:14px 18px;text-align:center}
+  #q-label{font-size:11px;letter-spacing:2px;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+  #q-name{font-size:22px;font-weight:800}
+  #btn-hint{margin-top:8px;padding:3px 14px;background:transparent;color:#64748b;border:1px solid #334155;border-radius:20px;cursor:pointer;font-size:12px}
+  #hint-text{margin-top:8px;font-size:13px;color:#fbbf24;font-style:italic;max-width:480px;display:none}
+  #image-area{flex:1;display:flex;justify-content:center;align-items:center;padding:16px;overflow:hidden}
+  #img-container{position:relative;display:inline-block;line-height:0}
+  #slide-img{max-width:100%;max-height:52vh;border-radius:10px;display:block;box-shadow:0 8px 32px rgba(0,0,0,0.5);pointer-events:none}
+  .hotspot-wrap{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform 0.2s}
+  .hotspot-btn{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.92);color:#1e293b;border:2.5px solid rgba(255,255,255,0.6);cursor:pointer;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);line-height:1;transition:all 0.2s}
+  #footer{background:#1e293b;border-top:1px solid #334155;padding:14px 18px;text-align:center;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  #footer-idle{color:#475569;font-size:14px}
+  #footer-answered{display:none;flex-direction:column;align-items:center;gap:8px}
+  #answer-result{font-size:15px;font-weight:700}
+  #answer-hint{font-size:13px;color:#fbbf24;font-style:italic;max-width:500px}
+  #btn-next{margin-top:4px;padding:9px 24px;background:#f43f5e;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  #results-screen{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px}
+  #big-score{font-size:52px;font-weight:800}
+  #big-score span{font-size:28px;font-weight:400;color:#94a3b8}
+  #results-list{width:100%;max-width:380px;display:flex;flex-direction:column;gap:6px}
+  .result-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;font-size:14px}
+  .result-row.ok{background:#14532d;border:1px solid #16a34a}
+  .result-row.bad{background:#450a0a;border:1px solid #b91c1c}
+</style>
+</head>
+<body>
+<div id="quiz-screen" style="display:flex;flex-direction:column;flex:1;min-height:100vh;">
+  <div id="topbar">
+    <span>🔬 Skin Histology Quiz</span>
+    <div id="topbar-right">
+      <span id="score-label"><b id="score-val">0</b> correct · Q<span id="q-num">1</span>/7</span>
+    </div>
+  </div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="question-banner">
+    <div id="q-label">Find this structure</div>
+    <div id="q-name"></div>
+    <button id="btn-hint" onclick="toggleHint()">Show hint</button>
+    <div id="hint-text"></div>
+  </div>
+  <div id="image-area">
+    <div id="img-container">
+      <img id="slide-img" src="${imgBase64}" alt="histology slide"/>
+    </div>
+  </div>
+  <div id="footer">
+    <p id="footer-idle">Click the numbered hotspot on the image above.</p>
+    <div id="footer-answered">
+      <p id="answer-result"></p>
+      <p id="answer-hint"></p>
+      <button id="btn-next" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+</div>
+<div id="results-screen">
+  <div style="font-size:48px" id="result-emoji">🎉</div>
+  <h2 style="font-size:22px;font-weight:700">Quiz Complete!</h2>
+  <div id="big-score"></div>
+  <div id="results-list"></div>
+  <button class="btn-primary" onclick="restartQuiz()">Try Again</button>
+</div>
+<script>
+const HOTSPOTS=${JSON.stringify(HOTSPOTS)};
+const POSITIONS=${JSON.stringify(frozenPositions)};
+function shuffle(a){return[...a].sort(()=>Math.random()-0.5)}
+let order=shuffle([...Array(HOTSPOTS.length).keys()]),qIdx=0,selected=null,score=0,showHint=false,results=[];
+
+function init(){
+  order=shuffle([...Array(HOTSPOTS.length).keys()]);
+  qIdx=0;selected=null;score=0;results=[];showHint=false;
+  buildHotspots();renderQuestion();
+}
+
+function buildHotspots(){
+  document.querySelectorAll('.hotspot-wrap').forEach(e=>e.remove());
+  const c=document.getElementById('img-container');
+  HOTSPOTS.forEach(h=>{
+    const w=document.createElement('div');w.className='hotspot-wrap';w.id='wrap-'+h.id;
+    const b=document.createElement('button');b.className='hotspot-btn';b.id='btn-'+h.id;
+    b.textContent=h.id;b.onclick=()=>clickHotspot(h.id);
+    w.appendChild(b);c.appendChild(w);
+    w.style.left=POSITIONS[h.id].x+'%';w.style.top=POSITIONS[h.id].y+'%';
+  });
+}
+
+function renderQuestion(){
+  const h=HOTSPOTS[order[qIdx]];
+  document.getElementById('q-name').textContent=h.label;
+  document.getElementById('hint-text').textContent=h.hint;
+  document.getElementById('hint-text').style.display='none';
+  document.getElementById('btn-hint').textContent='Show hint';
+  document.getElementById('score-val').textContent=score;
+  document.getElementById('q-num').textContent=qIdx+1;
+  document.getElementById('progress-fill').style.width=((qIdx/HOTSPOTS.length)*100)+'%';
+  document.getElementById('btn-hint').style.display='inline-block';
+  showHint=false;selected=null;
+  document.getElementById('footer-idle').style.display='block';
+  document.getElementById('footer-answered').style.display='none';
+  HOTSPOTS.forEach(hh=>styleHS(hh.id,'default'));
+}
+
+function styleHS(id,state){
+  const b=document.getElementById('btn-'+id),w=document.getElementById('wrap-'+id);
+  if(!b)return;
+  if(state==='correct'){b.style.background='#22c55e';b.style.color='white';b.style.border='2.5px solid #22c55e';b.style.boxShadow='0 0 0 4px rgba(34,197,94,0.35)';w.style.transform='translate(-50%,-50%) scale(1.2)';b.style.cursor='default';}
+  else if(state==='wrong'){b.style.background='#ef4444';b.style.color='white';b.style.border='2.5px solid #ef4444';b.style.boxShadow='0 0 0 4px rgba(239,68,68,0.35)';w.style.transform='translate(-50%,-50%) scale(1.1)';b.style.cursor='default';}
+  else if(state==='dim'){b.style.background='rgba(255,255,255,0.3)';b.style.color='rgba(255,255,255,0.5)';b.style.border='2.5px solid rgba(255,255,255,0.15)';w.style.transform='translate(-50%,-50%) scale(1)';b.style.cursor='default';}
+  else{b.style.background='rgba(255,255,255,0.92)';b.style.color='#1e293b';b.style.border='2.5px solid rgba(255,255,255,0.6)';b.style.boxShadow='0 2px 8px rgba(0,0,0,0.5)';w.style.transform='translate(-50%,-50%) scale(1)';b.style.cursor='pointer';}
+}
+
+function clickHotspot(id){
+  if(selected!==null)return;
+  const cur=HOTSPOTS[order[qIdx]],ok=id===cur.id;
+  selected=id;if(ok)score++;
+  results.push({correct:ok,label:cur.label});
+  HOTSPOTS.forEach(hh=>{if(hh.id===cur.id)styleHS(hh.id,'correct');else if(hh.id===id)styleHS(hh.id,'wrong');else styleHS(hh.id,'dim');});
+  document.getElementById('footer-idle').style.display='none';
+  document.getElementById('btn-hint').style.display='none';
+  document.getElementById('hint-text').style.display='none';
+  const r=document.getElementById('answer-result');
+  r.style.color=ok?'#22c55e':'#ef4444';
+  r.textContent=ok?'✓ Correct!':'✗ That was the '+HOTSPOTS.find(h=>h.id===id)?.label+'. Correct answer: hotspot #'+cur.id+'.';
+  document.getElementById('answer-hint').textContent=cur.hint;
+  document.getElementById('btn-next').textContent=qIdx+1>=HOTSPOTS.length?'See Results →':'Next Question →';
+  document.getElementById('footer-answered').style.display='flex';
+  document.getElementById('score-val').textContent=score;
+}
+
+function nextQuestion(){if(qIdx+1>=HOTSPOTS.length){showResults();return;}qIdx++;renderQuestion();}
+
+function showResults(){
+  document.getElementById('quiz-screen').style.display='none';
+  const rs=document.getElementById('results-screen');rs.style.display='flex';
+  const pct=Math.round((score/HOTSPOTS.length)*100);
+  document.getElementById('result-emoji').textContent=pct===100?'🏆':pct>=70?'🎉':'📖';
+  document.getElementById('big-score').innerHTML=score+'<span>/'+HOTSPOTS.length+'</span>';
+  document.getElementById('big-score').style.color=pct===100?'#fbbf24':pct>=70?'#22c55e':'#ef4444';
+  const list=document.getElementById('results-list');list.innerHTML='';
+  results.forEach(r=>{const row=document.createElement('div');row.className='result-row '+(r.correct?'ok':'bad');row.innerHTML='<span>'+(r.correct?'✓':'✗')+'</span><span>'+r.label+'</span>';list.appendChild(row);});
+}
+
+function restartQuiz(){
+  document.getElementById('results-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='flex';
+  init();
+}
+
+function toggleHint(){
+  showHint=!showHint;
+  document.getElementById('hint-text').style.display=showHint?'block':'none';
+  document.getElementById('btn-hint').textContent=showHint?'Hide hint':'Show hint';
+}
+
+init();
+<\/script>
+</body>
+</html>`;
+
+  // Show copy-to-save modal
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:14px;';
+
+  overlay.innerHTML = `
+    <div style="background:#1e293b;border-radius:12px;padding:24px;max-width:560px;width:100%;display:flex;flex-direction:column;gap:12px;border:1px solid #334155;">
+      <h2 style="font-size:18px;font-weight:700;color:white;">Save Your Quiz</h2>
+      <p style="font-size:13px;color:#94a3b8;line-height:1.6;">
+        Direct download is blocked in this environment. Follow these steps:<br>
+        <strong style="color:white;">1.</strong> Click <strong style="color:#22c55e;">Copy HTML</strong> below.<br>
+        <strong style="color:white;">2.</strong> Open a plain text editor (Notepad on Windows, TextEdit on Mac).<br>
+        <strong style="color:white;">3.</strong> Paste and save the file as <strong style="color:#fbbf24;">quiz.html</strong>.<br>
+        <strong style="color:white;">4.</strong> Open that file in any browser — it works completely offline!
+      </p>
+      <textarea id="export-html" readonly style="width:100%;height:120px;background:#0f172a;color:#64748b;border:1px solid #334155;border-radius:8px;padding:10px;font-size:11px;resize:none;font-family:monospace;"></textarea>
+      <div style="display:flex;gap:10px;">
+        <button id="copy-btn" style="flex:1;padding:10px;background:#22c55e;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">Copy HTML</button>
+        <button onclick="this.closest('div').parentElement.parentElement.remove()" style="flex:1;padding:10px;background:#334155;color:#94a3b8;border:none;border-radius:8px;cursor:pointer;font-size:14px;">Close</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  const ta = document.getElementById('export-html');
+  ta.value = html;
+  document.getElementById('copy-btn').onclick = () => {
+    ta.select();
+    document.execCommand('copy');
+    document.getElementById('copy-btn').textContent = '✓ Copied!';
+    setTimeout(() => document.getElementById('copy-btn').textContent = 'Copy HTML', 2000);
+  };
+}
+</script>
+</body>
+</html>
